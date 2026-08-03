@@ -174,31 +174,47 @@ ${building.recommendation}
 
     function speak(text) {
 
-        if (!("speechSynthesis" in window)) return;
+    if (!("speechSynthesis" in window)) return;
 
-        // Stop any speech already in progress
-        window.speechSynthesis.cancel();
+    window.speechSynthesis.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(text);
+    // Remove emojis before speaking
+    const cleanText = text.replace(
+        /[\u{1F300}-\u{1FAFF}]/gu,
+        ""
+    );
 
-        utterance.lang = "en-US";
-        utterance.rate = 0.95;
-        utterance.pitch = 1;
-        utterance.volume = 1;
+    const utterance = new SpeechSynthesisUtterance(cleanText);
 
-        // Try to use a better English voice if available
+    utterance.lang = "en-US";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    function loadVoice() {
+
         const voices = window.speechSynthesis.getVoices();
 
-        const preferred =
-            voices.find(v => v.name.includes("Google")) ||
+        // Prefer Google US English
+        let voice =
+            voices.find(v => v.name === "Google US English") ||
+            voices.find(v => v.name === "Google UK English Female") ||
+            voices.find(v => v.lang === "en-US") ||
             voices.find(v => v.lang.startsWith("en"));
 
-        if (preferred) {
-            utterance.voice = preferred;
+        if (voice) {
+            utterance.voice = voice;
         }
 
         window.speechSynthesis.speak(utterance);
     }
+
+    if (window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = loadVoice;
+    } else {
+        loadVoice();
+    }
+}
     return (
         <div className="bg-slate-900 border border-slate-700 rounded-3xl p-8">
 
