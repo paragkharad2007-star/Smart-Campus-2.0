@@ -1,6 +1,10 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { initialBuildings } from "../data/liveCampusData";
 import { simulateLiveData } from "../utils/simulateLiveData";
+import ReportGenerator from "../components/ReportGenerator";
+import HeroBanner from "../components/HeroBanner";
+import LiveClock from "../components/LiveClock";
+import CountUp from "react-countup";
 import {
   Users,
   Zap,
@@ -110,6 +114,10 @@ export default function Dashboard() {
       activeTab={activeTab}
       setActiveTab={setActiveTab}
     >
+
+      <HeroBanner />
+
+      <LiveClock />
 
       {/* KPI Cards */}
 
@@ -303,6 +311,10 @@ mx-auto
           </Suspense>
         )
       }
+      <ReportGenerator buildings={buildings} />
+
+
+
 
     </DashboardLayout >
   );

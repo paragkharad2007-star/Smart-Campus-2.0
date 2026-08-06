@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import axios from "axios";
 
 export default function AICommandCenter({ buildings }) {
     const [query, setQuery] = useState("");
@@ -174,47 +175,47 @@ ${building.recommendation}
 
     function speak(text) {
 
-    if (!("speechSynthesis" in window)) return;
+        if (!("speechSynthesis" in window)) return;
 
-    window.speechSynthesis.cancel();
+        window.speechSynthesis.cancel();
 
-    // Remove emojis before speaking
-    const cleanText = text.replace(
-        /[\u{1F300}-\u{1FAFF}]/gu,
-        ""
-    );
+        // Remove emojis before speaking
+        const cleanText = text.replace(
+            /[\u{1F300}-\u{1FAFF}]/gu,
+            ""
+        );
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
+        const utterance = new SpeechSynthesisUtterance(cleanText);
 
-    utterance.lang = "en-US";
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.volume = 1;
+        utterance.lang = "en-US";
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        utterance.volume = 1;
 
-    function loadVoice() {
+        function loadVoice() {
 
-        const voices = window.speechSynthesis.getVoices();
+            const voices = window.speechSynthesis.getVoices();
 
-        // Prefer Google US English
-        let voice =
-            voices.find(v => v.name === "Google US English") ||
-            voices.find(v => v.name === "Google UK English Female") ||
-            voices.find(v => v.lang === "en-US") ||
-            voices.find(v => v.lang.startsWith("en"));
+            // Prefer Google US English
+            let voice =
+                voices.find(v => v.name === "Google US English") ||
+                voices.find(v => v.name === "Google UK English Female") ||
+                voices.find(v => v.lang === "en-US") ||
+                voices.find(v => v.lang.startsWith("en"));
 
-        if (voice) {
-            utterance.voice = voice;
+            if (voice) {
+                utterance.voice = voice;
+            }
+
+            window.speechSynthesis.speak(utterance);
         }
 
-        window.speechSynthesis.speak(utterance);
+        if (window.speechSynthesis.getVoices().length === 0) {
+            window.speechSynthesis.onvoiceschanged = loadVoice;
+        } else {
+            loadVoice();
+        }
     }
-
-    if (window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.onvoiceschanged = loadVoice;
-    } else {
-        loadVoice();
-    }
-}
     return (
         <div className="bg-slate-900 border border-slate-700 rounded-3xl p-8">
 
