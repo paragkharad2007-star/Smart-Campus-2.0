@@ -6,7 +6,6 @@ export default function AICommandCenter({ buildings }) {
     const [messages, setMessages] = useState([]);
     const [thinking, setThinking] = useState(false);
     const [typingText, setTypingText] = useState("");
-
     const [listening, setListening] = useState(false);
 
     const bottomRef = useRef(null);
@@ -18,8 +17,7 @@ export default function AICommandCenter({ buildings }) {
     }, [messages, typingText]);
 
     function handleAsk(voiceQuery = null) {
-
-        if (!query.trim()) return;
+        if (!query.trim() && !voiceQuery) return;
 
         const currentQuery = voiceQuery || query;
 
@@ -32,7 +30,6 @@ export default function AICommandCenter({ buildings }) {
         );
 
         if (building) {
-
             aiReply = `
 🏢 ${building.name}
 
@@ -48,31 +45,24 @@ ${building.ai}
 ✅ Recommendation:
 ${building.recommendation}
 `;
-
         }
 
         else if (text.includes("highest energy")) {
-
             const highest = [...buildings].sort(
                 (a, b) => parseInt(b.energy) - parseInt(a.energy)
             )[0];
 
             aiReply = `⚡ ${highest.name} currently has the highest energy usage (${highest.energy}).`;
-
         }
 
         else if (text.includes("emergency")) {
-
             aiReply =
                 "🚨 No campus-wide emergency detected. Only Lab energy usage is above normal.";
-
         }
 
         else {
-
             aiReply =
                 "Sorry, I couldn't understand that. Try asking about Engineering, Library, Labs, Hostel, Cafeteria or Admin.";
-
         }
 
         setMessages((prev) => [
@@ -88,7 +78,6 @@ ${building.recommendation}
         setThinking(true);
 
         setTimeout(() => {
-
             setThinking(false);
 
             let index = 0;
@@ -96,48 +85,42 @@ ${building.recommendation}
             setTypingText("");
 
             const interval = setInterval(() => {
-
                 index++;
 
                 setTypingText(aiReply.slice(0, index));
 
                 if (index >= aiReply.length) {
-
                     clearInterval(interval);
 
                     setMessages((prev) => [
-
                         ...prev,
-
                         {
                             sender: "ai",
                             text: aiReply,
                         },
-
                     ]);
 
                     setTypingText("");
 
-                    // Speak after the message has been displayed
+                    // Speak ONLY ONCE after the answer is displayed
                     speak(aiReply);
-
                 }
-
             }, 15);
-
         }, 1000);
-
     }
 
     function startListening() {
-
-        if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+        if (
+            !("webkitSpeechRecognition" in window) &&
+            !("SpeechRecognition" in window)
+        ) {
             alert("Speech Recognition is not supported in this browser.");
             return;
         }
 
         const SpeechRecognition =
-            window.SpeechRecognition || window.webkitSpeechRecognition;
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition;
 
         const recognition = new SpeechRecognition();
 
@@ -150,8 +133,8 @@ ${building.recommendation}
         recognition.start();
 
         recognition.onresult = (event) => {
-
-            const transcript = event.results[0][0].transcript;
+            const transcript =
+                event.results[0][0].transcript;
 
             setQuery(transcript);
 
@@ -160,7 +143,6 @@ ${building.recommendation}
             setTimeout(() => {
                 handleAsk(transcript);
             }, 300);
-
         };
 
         recognition.onerror = () => {
@@ -170,13 +152,12 @@ ${building.recommendation}
         recognition.onend = () => {
             setListening(false);
         };
-
     }
 
     function speak(text) {
-
         if (!("speechSynthesis" in window)) return;
 
+        // Stop any previous speech
         window.speechSynthesis.cancel();
 
         // Remove emojis before speaking
@@ -185,37 +166,70 @@ ${building.recommendation}
             ""
         );
 
-        const utterance = new SpeechSynthesisUtterance(cleanText);
+        const voices = window.speechSynthesis.getVoices();
 
-        utterance.lang = "en-US";
-        utterance.rate = 1;
-        utterance.pitch = 1;
-        utterance.volume = 1;
+        const speakNow = () => {
+            // Make absolutely sure no previous speech is queued
+            window.speechSynthesis.cancel();
 
-        function loadVoice() {
+            const availableVoices =
+                window.speechSynthesis.getVoices();
 
-            const voices = window.speechSynthesis.getVoices();
+            // Select one consistent English voice
+            const voice =
+                availableVoices.find(
+                    (v) => v.name === "Google US English"
+                ) ||
+                availableVoices.find(
+                    (v) =>
+                        v.lang === "en-US" &&
+                        v.name
+                            .toLowerCase()
+                            .includes("female")
+                ) ||
+                availableVoices.find(
+                    (v) => v.lang === "en-US"
+                ) ||
+                availableVoices.find(
+                    (v) => v.lang.startsWith("en")
+                );
 
-            // Prefer Google US English
-            let voice =
-                voices.find(v => v.name === "Google US English") ||
-                voices.find(v => v.name === "Google UK English Female") ||
-                voices.find(v => v.lang === "en-US") ||
-                voices.find(v => v.lang.startsWith("en"));
+            const utterance =
+                new SpeechSynthesisUtterance(cleanText);
+
+            utterance.lang = "en-US";
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            utterance.volume = 1;
 
             if (voice) {
                 utterance.voice = voice;
             }
 
             window.speechSynthesis.speak(utterance);
-        }
+        };
 
-        if (window.speechSynthesis.getVoices().length === 0) {
-            window.speechSynthesis.onvoiceschanged = loadVoice;
+        // Voices may load asynchronously in Chrome
+        if (voices.length === 0) {
+            const handleVoicesChanged = () => {
+                window.speechSynthesis.removeEventListener(
+                    "voiceschanged",
+                    handleVoicesChanged
+                );
+
+                speakNow();
+            };
+
+            window.speechSynthesis.addEventListener(
+                "voiceschanged",
+                handleVoicesChanged,
+                { once: true }
+            );
         } else {
-            loadVoice();
+            speakNow();
         }
     }
+
     return (
         <div className="bg-slate-900 border border-slate-700 rounded-3xl p-8">
 
@@ -246,7 +260,6 @@ ${building.recommendation}
                     "Cafeteria",
                     "Emergency",
                 ].map((item) => (
-
                     <button
                         key={item}
                         onClick={() => setQuery(item)}
@@ -254,7 +267,6 @@ ${building.recommendation}
                     >
                         {item}
                     </button>
-
                 ))}
 
             </div>
@@ -270,12 +282,15 @@ ${building.recommendation}
 
                 <button
                     onClick={startListening}
-                    className={`font-bold px-5 py-3 rounded-xl transition ${listening
-                        ? "bg-green-500 text-white animate-pulse"
-                        : "bg-red-500 hover:bg-red-400 text-white"
-                        }`}
+                    className={`font-bold px-5 py-3 rounded-xl transition ${
+                        listening
+                            ? "bg-green-500 text-white animate-pulse"
+                            : "bg-red-500 hover:bg-red-400 text-white"
+                    }`}
                 >
-                    {listening ? "🎙️ Listening..." : "🎤"}
+                    {listening
+                        ? "🎙️ Listening..."
+                        : "🎤"}
                 </button>
 
             </div>
@@ -296,67 +311,67 @@ ${building.recommendation}
 
                             <div
                                 key={index}
-                                className={`flex items-end gap-3 ${msg.sender === "user"
-                                    ? "justify-end"
-                                    : "justify-start"
-                                    }`}
+                                className={`flex items-end gap-3 ${
+                                    msg.sender === "user"
+                                        ? "justify-end"
+                                        : "justify-start"
+                                }`}
                             >
 
                                 {msg.sender === "ai" && (
-
                                     <div className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center text-xl">
-
                                         🤖
-
                                     </div>
-
                                 )}
 
                                 <div
-                                    className={`max-w-[80%] lg:max-w-[70%] rounded-3xl px-5 py-3 whitespace-pre-line ${msg.sender === "user"
-                                        ? "bg-cyan-500 text-black"
-                                        : "bg-slate-700 text-white"
-                                        }`}
+                                    className={`max-w-[80%] lg:max-w-[70%] rounded-3xl px-5 py-3 whitespace-pre-line ${
+                                        msg.sender === "user"
+                                            ? "bg-cyan-500 text-black"
+                                            : "bg-slate-700 text-white"
+                                    }`}
                                 >
-
                                     {msg.text}
-
                                 </div>
 
                                 {msg.sender === "user" && (
-
                                     <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xl">
-
                                         👤
-
                                     </div>
-
                                 )}
 
                             </div>
 
                         ))}
+
                         {thinking && (
 
                             <div className="flex justify-start">
 
                                 <div className="bg-slate-700 text-white rounded-2xl px-5 py-3 animate-pulse">
 
-                                    🤖 <div className="flex gap-2">
+                                    🤖
+
+                                    <div className="flex gap-2">
 
                                         <span className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce"></span>
 
                                         <span
                                             className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce"
-                                            style={{ animationDelay: "0.2s" }}
+                                            style={{
+                                                animationDelay: "0.2s",
+                                            }}
                                         ></span>
 
                                         <span
                                             className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce"
-                                            style={{ animationDelay: "0.4s" }}
+                                            style={{
+                                                animationDelay: "0.4s",
+                                            }}
                                         ></span>
 
                                     </div>
+
                                 </div>
 
                             </div>
@@ -368,9 +383,7 @@ ${building.recommendation}
                             <div className="flex justify-start">
 
                                 <div className="bg-slate-700 text-white rounded-2xl px-5 py-3 whitespace-pre-line">
-
                                     {typingText}
-
                                 </div>
 
                             </div>
@@ -388,5 +401,3 @@ ${building.recommendation}
         </div>
     );
 }
-
-
