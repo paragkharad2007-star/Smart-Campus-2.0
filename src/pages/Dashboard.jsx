@@ -1,4 +1,9 @@
-import React, { Suspense, useEffect, useState } from "react";
+import React, {
+  Suspense,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import { initialBuildings } from "../data/liveCampusData";
 import { simulateLiveData } from "../utils/simulateLiveData";
 import ReportGenerator from "../components/ReportGenerator";
@@ -28,6 +33,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("campus");
   const [selectedBuilding, setSelectedBuilding] = useState(buildings[0]);
+  const lastStudentUpdate = useRef(Date.now());
 
   const totalStudents = buildings.reduce(
     (sum, building) => sum + building.students,
@@ -67,25 +73,45 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBuildings((prevBuildings) => {
-        const updated = simulateLiveData(prevBuildings);
+ // Live sensor data - updates every 2 seconds
+useEffect(() => {
+  const interval = setInterval(() => {
+    setBuildings((prevBuildings) => {
+      const updated = simulateLiveData(prevBuildings);
 
-        const current = updated.find(
-          (b) => b.id === selectedBuilding.id
-        );
+      const current = updated.find(
+        (b) => b.id === selectedBuilding.id
+      );
 
-        if (current) {
-          setSelectedBuilding(current);
-        }
+      if (current) {
+        setSelectedBuilding(current);
+      }
 
-        return updated;
-      });
-    }, 2000);
+      return updated;
+    });
+  }, 2000);
 
-    return () => clearInterval(interval);
-  }, [selectedBuilding]);
+  return () => clearInterval(interval);
+}, [selectedBuilding]);
+
+
+// Student occupancy - updates every 1 minute
+useEffect(() => {
+  const interval = setInterval(() => {
+    setBuildings((prevBuildings) =>
+      prevBuildings.map((building) => ({
+        ...building,
+
+        students: Math.max(
+          0,
+          building.students + Math.floor(Math.random() * 11 - 5)
+        ),
+      }))
+    );
+  }, 60000);
+
+  return () => clearInterval(interval);
+}, []);
 
   if (loading) {
     return (
@@ -117,9 +143,11 @@ export default function Dashboard() {
 
       <HeroBanner />
 
-      <LiveClock />
+<div className="mb-6">
+  <LiveClock />
+</div>
 
-      {/* KPI Cards */}
+{/* KPI Cards */}
 
       <div className="grid
     grid-cols-1

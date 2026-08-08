@@ -7,27 +7,14 @@ export default function DashboardLayout({
   setActiveTab,
 }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex overflow-hidden">
+    <div className="flex min-h-screen bg-slate-950 text-white">
 
-      {/* Sidebar */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
 
-      {/* Main Content */}
-      <main
-        className="
-  flex-1
-  min-w-0
-  p-4
-  sm:p-6
-  overflow-y-auto
-  overflow-x-hidden
-"
-      >
-        <Topbar />
-
+      <main className="flex-1 min-w-0 p-4 sm:p-6 overflow-y-auto overflow-x-hidden">
         <div className="mt-6">
           {children}
         </div>

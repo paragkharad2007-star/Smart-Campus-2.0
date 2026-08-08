@@ -1,9 +1,13 @@
-export function simulateLiveData(buildings) {
+export function simulateLiveData(buildings, updateStudents = false) {
   return buildings.map((building) => ({
     ...building,
 
-    students:
-      building.students + Math.floor(Math.random() * 11 - 5),
+    students: updateStudents
+      ? Math.max(
+          0,
+          building.students + Math.floor(Math.random() * 11 - 5)
+        )
+      : building.students,
 
     energy: Math.min(
       100,

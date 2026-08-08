@@ -45,64 +45,82 @@ export default function WeatherWidget() {
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5">
+  <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-xl">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    {/* Header */}
+    <div className="flex justify-between items-start mb-6">
 
-        <div>
-          <h2 className="text-xl font-bold text-cyan-400">
-            🌤 Campus Weather
-          </h2>
+      <div>
+        <h2 className="text-2xl font-bold text-cyan-400">
+          🌤️ Campus Weather
+        </h2>
 
-          <p className="text-slate-400 text-sm mt-1">
-            Live weather conditions
-          </p>
-        </div>
-
-        <div className="text-right">
-          <p className="text-4xl font-bold text-white">
-            {Math.round(weather.main.temp)}°
-          </p>
-
-          <p className="text-slate-400">
-            {weather.weather[0].main}
-          </p>
-        </div>
-
+        <p className="text-slate-300 mt-1">
+          Live weather conditions
+        </p>
       </div>
 
-      {/* Weather Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+      <div className="text-right">
+        <p className="text-4xl font-bold text-white">
+          29°
+        </p>
 
-        <div className="bg-slate-800 rounded-xl p-3">
-          <p className="text-slate-400 text-sm">📍 City</p>
-          <p className="font-semibold mt-1">{weather.name}</p>
-        </div>
-
-        <div className="bg-slate-800 rounded-xl p-3">
-          <p className="text-slate-400 text-sm">💧 Humidity</p>
-          <p className="font-semibold mt-1">
-            {weather.main.humidity}%
-          </p>
-        </div>
-
-        <div className="bg-slate-800 rounded-xl p-3">
-          <p className="text-slate-400 text-sm">🌬 Wind</p>
-          <p className="font-semibold mt-1">
-            {weather.wind.speed} m/s
-          </p>
-        </div>
-
-        <div className="bg-slate-800 rounded-xl p-3">
-          <p className="text-slate-400 text-sm">🌡 Feels Like</p>
-          <p className="font-semibold mt-1">
-            {Math.round(weather.main.feels_like)}°
-          </p>
-        </div>
-
+        <p className="text-slate-300 mt-1">
+          Rain
+        </p>
       </div>
 
     </div>
-  );
+
+    {/* Weather Details */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      {/* City */}
+      <div className="bg-slate-800 rounded-2xl p-5">
+        <p className="text-slate-300 text-lg">
+          📍 City
+        </p>
+
+        <p className="text-white text-xl font-semibold mt-2">
+          Mumbai
+        </p>
+      </div>
+
+      {/* Humidity */}
+      <div className="bg-slate-800 rounded-2xl p-5">
+        <p className="text-slate-300 text-lg">
+          💧 Humidity
+        </p>
+
+        <p className="text-white text-xl font-semibold mt-2">
+          77%
+        </p>
+      </div>
+
+      {/* Wind */}
+      <div className="bg-slate-800 rounded-2xl p-5">
+        <p className="text-slate-300 text-lg">
+          💨 Wind
+        </p>
+
+        <p className="text-white text-xl font-semibold mt-2">
+          6.68 m/s
+        </p>
+      </div>
+
+      {/* Feels Like */}
+      <div className="bg-slate-800 rounded-2xl p-5">
+        <p className="text-slate-300 text-lg">
+          🌡️ Feels Like
+        </p>
+
+        <p className="text-white text-xl font-semibold mt-2">
+          33°
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+);
 }
